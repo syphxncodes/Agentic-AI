@@ -5,6 +5,7 @@ import os
 from langgraph.graph import Graph
 from langchain_core.prompts import PromptTemplate
 
+
 MODEL = "gemma2:latest"
 model = Ollama(model=MODEL)
 
@@ -51,7 +52,6 @@ def get_data_from_Twitter(state):
             twitter_data = f"According to the tweets related to medical health, the most frequent in this week's span is {x}"
             state["twitter_data"] = twitter_data
         except FileNotFoundError:
-            # Handle missing file gracefully
             state["twitter_data"] = "No Twitter data available - file not found"
         except Exception as e:
             # Catch any other exceptions
@@ -110,15 +110,26 @@ graph.add_node("Hospital", get_data_from_dataset)
 graph.add_node("Twitter", get_data_from_Twitter)
 graph.add_node("analyze", analyze_with_llm)
 graph.set_entry_point("Hospital")
+graph.set_finish_point("analyze")  
 graph.add_edge("Hospital", "Twitter")
 graph.add_edge("Twitter", "analyze")
 
+
 # Compile and invoke
 app = graph.compile()
-final_state = app.invoke({},debug=True)
+try:
+    final_state = app.invoke({})
+    if final_state is None:
+        raise ValueError("Graph returned None - check finish point")
+except Exception as e:
+    print(f"Execution error: {e}")
+    final_state = {}
 
-# Use safe access with a default value
-if final_state is not None and "analyze" in final_state and "model_analysis" in final_state["analyze"]:
-    print(final_state["analyze"]["model_analysis"])
-else:
-    print("Error: Model analysis not available. Check if the graph returned a valid state.")
+
+flattened = {}
+if isinstance(final_state, dict):
+    for step_data in final_state.values() if all(isinstance(v, dict) for v in final_state.values()) else [final_state]:
+        flattened.update(step_data)
+        
+# Output result
+print(flattened.get("model_analysis", "Model analysis not found."))
