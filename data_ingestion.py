@@ -3,32 +3,122 @@ import numpy as np
 from langchain_community.llms import Ollama
 import os
 from langgraph.graph import Graph
+from langchain_core.prompts import PromptTemplate
 
-MODEL="gemma2:latest"
-model=Ollama(model=MODEL)
+MODEL = "gemma2:latest"
+model = Ollama(model=MODEL)
 
-def get_data_from_dataset():
-    df=pd.read_csv("conditions.csv")
-    x=df["DESCRIPTION"].value_counts().idxmax()
-    df["DESCRIPTION"]=df["DESCRIPTION"].replace(x,"Influenza")
-    most_frequent_disease=df["DESCRIPTION"].value_counts().idxmax()
-    return f"According to the hospital data, the most frequent disease in this week's span is {most_frequent_disease}"
+def get_data_from_dataset(state):
+    try:
+        # Initialize state if it's None
+        state = state or {}
+        
+        # Try to read the CSV file
+        try:
+            df = pd.read_csv("conditions.csv")
+            most_frequent_disease = df["DESCRIPTION"].value_counts().idxmax()
+            # Only replace if needed for simulation
+            if most_frequent_disease:
+                df["DESCRIPTION"] = df["DESCRIPTION"].replace(most_frequent_disease, "Influenza")
+                most_frequent_disease = "Influenza"
+            
+            hospital_summary = f"According to the hospital data, the most frequent disease in this week's span is {most_frequent_disease}"
+            state["hospital_data"] = hospital_summary
+        except FileNotFoundError:
+            # Handle missing file gracefully
+            state["hospital_data"] = "No hospital data available - file not found"
+        except Exception as e:
+            # Catch any other exceptions
+            state["hospital_data"] = f"Error processing hospital data: {str(e)}"
+            
+        return state
+    except Exception as e:
+        # Always return a valid state, even on error
+        return {"hospital_data": f"Error: {str(e)}"}
 
-Data_From_Dataset=get_data_from_dataset()
+def get_data_from_Twitter(state):
+    try:
+        # Ensure state exists
+        state = state or {}
+        
+        try:
+            df1 = pd.read_csv("unique_medical_tweets_dataset.csv")
+            x = df1["keyword"].value_counts().idxmax()
+            if x:
+                df1["keyword"] = df1["keyword"].replace(x, "Influenza")
+                x = "Influenza"
+            
+            twitter_data = f"According to the tweets related to medical health, the most frequent in this week's span is {x}"
+            state["twitter_data"] = twitter_data
+        except FileNotFoundError:
+            # Handle missing file gracefully
+            state["twitter_data"] = "No Twitter data available - file not found"
+        except Exception as e:
+            # Catch any other exceptions
+            state["twitter_data"] = f"Error processing Twitter data: {str(e)}"
+            
+        return state
+    except Exception as e:
+        # If state was None, initialize it
+        if state is None:
+            state = {}
+        state["twitter_data"] = f"Error: {str(e)}"
+        return state
 
-def get_data_from_Twitter():
-    df1=pd.read_csv("unique_medical_tweets_dataset.csv")
-    x=df1["keyword"].value_counts().idxmax()
-    df1["keyword"]=df1["keyword"].replace(x,"Influenza")
-    x=df1["keyword"].value_counts().idxmax()
-    return f"According to the tweets related to medical health, the most frequent in this week's span is {x}"
+def analyze_with_llm(state):
+    try:
+        # Ensure state exists
+        state = state or {}
+        
+        # Check if required data exists
+        if "hospital_data" not in state:
+            state["hospital_data"] = "No hospital data available"
+        if "twitter_data" not in state:
+            state["twitter_data"] = "No Twitter data available"
+        
+        prompt = PromptTemplate.from_template("""
+        You are an agent, which analyzes the data from                                   
+        Hospital Data: {hospital}
+        Twitter Data: {twitter}
+        Based on this information, summarize.                                                                                                                
+        """)
+        
+        final_prompt = prompt.format(
+            hospital=state["hospital_data"],
+            twitter=state["twitter_data"]
+        )
+        
+        try:
+            result = model.invoke(final_prompt)
+            state["model_analysis"] = result
+        except Exception as e:
+            # Handle LLM errors gracefully
+            state["model_analysis"] = f"Error analyzing data: {str(e)}"
+            
+        return state
+    except Exception as e:
+        # Always return a valid state, even on error
+        return {"model_analysis": f"Error in analysis: {str(e)}", 
+                "hospital_data": state.get("hospital_data", "Missing"), 
+                "twitter_data": state.get("twitter_data", "Missing")}
 
-Data_from_Twitter=get_data_from_Twitter()
 
-##print(model.invoke("who are u?")) - shows that it is working
 
-workflow=Graph()
-workflow.add_node() # has functions that we need
-workflow.add_edge() # has the relationship between the functions
-app=workflow.compile()
-app.invoke("hi")
+# Create the graph
+graph = Graph()
+graph.add_node("Hospital", get_data_from_dataset)
+graph.add_node("Twitter", get_data_from_Twitter)
+graph.add_node("analyze", analyze_with_llm)
+graph.set_entry_point("Hospital")
+graph.add_edge("Hospital", "Twitter")
+graph.add_edge("Twitter", "analyze")
+
+# Compile and invoke
+app = graph.compile()
+final_state = app.invoke({},debug=True)
+
+# Use safe access with a default value
+if final_state is not None and "analyze" in final_state and "model_analysis" in final_state["analyze"]:
+    print(final_state["analyze"]["model_analysis"])
+else:
+    print("Error: Model analysis not available. Check if the graph returned a valid state.")
