@@ -1,5 +1,11 @@
 import pandas as pd
 import numpy as np
+from langchain_community.llms import Ollama
+import os
+from langgraph.graph import Graph
+
+MODEL="gemma2:latest"
+model=Ollama(model=MODEL)
 
 def get_data_from_dataset():
     df=pd.read_csv("conditions.csv")
@@ -18,4 +24,11 @@ def get_data_from_Twitter():
     return f"According to the tweets related to medical health, the most frequent in this week's span is {x}"
 
 Data_from_Twitter=get_data_from_Twitter()
-print(Data_from_Twitter)
+
+##print(model.invoke("who are u?")) - shows that it is working
+
+workflow=Graph()
+workflow.add_node() # has functions that we need
+workflow.add_edge() # has the relationship between the functions
+app=workflow.compile()
+app.invoke("hi")

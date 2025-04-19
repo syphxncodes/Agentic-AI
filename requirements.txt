@@ -1,2 +1,5 @@
 numpy
 pandas
+langchain_community
+langchain
+langgraph
