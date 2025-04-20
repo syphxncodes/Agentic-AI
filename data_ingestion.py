@@ -4,6 +4,10 @@ from langchain_community.llms import Ollama
 import os
 from langgraph.graph import Graph
 from langchain_core.prompts import PromptTemplate
+from langchain_google_community import GmailToolkit
+from langchain_google_community.gmail.send_message import GmailSendMessage
+import regex as re
+send_tool=GmailSendMessage()
 
 
 MODEL = "gemma2:latest"
@@ -64,8 +68,9 @@ def get_data_from_Twitter(state):
             state = {}
         state["twitter_data"] = f"Error: {str(e)}"
         return state
-
+msg=""
 def analyze_with_llm(state):
+    global msg
     try:
         # Ensure state exists
         state = state or {}
@@ -80,7 +85,7 @@ def analyze_with_llm(state):
         You are an agent, which analyzes the data from                                   
         Hospital Data: {hospital}
         Twitter Data: {twitter}
-        Based on this information, summarize.                                                                                                                
+        Based on this information, summarize, and if there is an outbreak, write the word outbreak compulsorily in the string.                                                                                                                
         """)
         
         final_prompt = prompt.format(
@@ -90,6 +95,7 @@ def analyze_with_llm(state):
         
         try:
             result = model.invoke(final_prompt)
+            msg+=result
             state["model_analysis"] = result
         except Exception as e:
             # Handle LLM errors gracefully
@@ -101,9 +107,7 @@ def analyze_with_llm(state):
         return {"model_analysis": f"Error in analysis: {str(e)}", 
                 "hospital_data": state.get("hospital_data", "Missing"), 
                 "twitter_data": state.get("twitter_data", "Missing")}
-
-
-
+ 
 # Create the graph
 graph = Graph()
 graph.add_node("Hospital", get_data_from_dataset)
@@ -132,4 +136,16 @@ if isinstance(final_state, dict):
         flattened.update(step_data)
         
 # Output result
-print(flattened.get("model_analysis", "Model analysis not found."))
+print(flattened.get("model_analysis", "Model analysis not found."))\
+#Sends active responses about the outbreak.
+msg=flattened.get("model_analysis","")
+#outbreak_detected = bool(re.search(r'\boutbreak\b', msg, re.IGNORECASE))
+#print(outbreak_detected)
+#if (outbreak_detected):
+    #list1=["kodithyalasaiuday1234@gmail.com","f20230209@dubai.bits-pilani.ac.in","f20230208@dubai.bits-pilani.ac.in","f20230241@dubai.bits-pilani.ac.in"]
+    #for str11 in list1:
+         #str1=f"hi guys. There is an outbreak of influenza.Be very careful. Savdhan rahe, sathark rahe."
+         #response=send_tool.invoke({
+            #"to":str11,
+            #"subject":"Savdhan Rahe, Sathark Rahe",
+            #"message": str1 })
