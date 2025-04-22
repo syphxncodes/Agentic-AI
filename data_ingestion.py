@@ -7,18 +7,25 @@ from langchain_core.prompts import PromptTemplate
 from langchain_google_community import GmailToolkit
 from langchain_google_community.gmail.send_message import GmailSendMessage
 import regex as re
+import json 
+from langchain.output_parsers import StructuredOutputParser
+from langchain.output_parsers.json import parse_json_markdown
+import csv
+import datetime
+  # Safely extracts JSON block from markdown
+
 send_tool=GmailSendMessage()
 
 
-MODEL = "llama3:latest"
+MODEL = "gemma3:12b"
 model = Ollama(model=MODEL)
 
 def get_data_from_dataset(state):
     try:
-        # Initialize state if it's None
+        
         state = state or {}
         
-        # Try to read the CSV file
+        
         try:
             df = pd.read_csv("conditions.csv")
             most_frequent_disease = df["DESCRIPTION"].value_counts().idxmax()
@@ -30,10 +37,10 @@ def get_data_from_dataset(state):
             hospital_summary = f"According to the hospital data, the most frequent disease in this week's span is {most_frequent_disease}"
             state["hospital_data"] = hospital_summary
         except FileNotFoundError:
-            # Handle missing file gracefully
+            
             state["hospital_data"] = "No hospital data available - file not found"
         except Exception as e:
-            # Catch any other exceptions
+           
             state["hospital_data"] = f"Error processing hospital data: {str(e)}"
             
         return state
@@ -58,7 +65,7 @@ def get_data_from_Twitter(state):
         except FileNotFoundError:
             state["twitter_data"] = "No Twitter data available - file not found"
         except Exception as e:
-            # Catch any other exceptions
+            
             state["twitter_data"] = f"Error processing Twitter data: {str(e)}"
             
         return state
@@ -101,11 +108,18 @@ Based on this, calculate the **total number of medicines required per hospital**
 Note: Since both the severity and the average number of people per week are high, don’t hesitate to recommend a **higher** amount of medical resources.  
 
 In your final response, include:  
-- Medicines (with names and quantities)  
-- Equipment (names and quantities)  
-
-Present all outputs in clear, structured lists. Give different quantities, that are believable.Don't give repeated.
- """)
+- Medicines (with names and quantities)[Include your own medicines, but also consider medicines from ['Ciprofloxacin' 'Atorvastatin' 'Wheelchair' 'Salbutamol' 'Doxycycline'
+ 'Scalpel' 'Pulse Oximeter' 'Lisinopril' 'Defibrillator' 'Fluconazole'
+ 'Paracetamol' 'Oxygen Cylinder' 'Hand Sanitizer' 'Amoxicillin'
+ 'Sterile Gauze' 'Disposable Gloves' 'IV Bag' 'Surgical Scissors'
+ 'Stethoscope' 'Pantoprazole' 'Levothyroxine' 'Blood Pressure Monitor'
+ 'Surgical Masks' 'Azithromycin' 'Thermometer' 'Omeprazole' 'Ventilator'
+ 'Ibuprofen' 'Metronidazole' 'Aspirin' 'Hydrochlorothiazide' 'Syringe Set'
+ 'Simvastatin' 'Bandage Roll' 'Metformin' 'Prednisolone' 'Drip Stand'
+ 'ECG Machine' 'Losartan' 'Insulin Pen']](Consider other medicines as well as required) - Consider the outbreak average as well and suggest(and give the number of medicines as a surplus to the hospital per week, give a good amount from 100-500), because you are suggesting less.
+- Equipment (names and quantities).Give the reason behind such number.
+Present all outputs in clear, in json format (with equipment:[name,quantity], and medicines:[name,quantity]). Give different quantities, that are believable.Don't give repeated.
+ Always only return json for medicines and equipment, not for the summary. For the summary, return normal text.""")
         
         final_prompt = prompt.format(
             hospital=state["hospital_data"],
@@ -119,20 +133,17 @@ Present all outputs in clear, structured lists. Give different quantities, that 
             msg+=result
             state["model_analysis"] = result
         except Exception as e:
-            # Handle LLM errors gracefully
+            
             state["model_analysis"] = f"Error analyzing data: {str(e)}"
             
         return state
     except Exception as e:
-        # Always return a valid state, even on error
+        
         return {"model_analysis": f"Error in analysis: {str(e)}", 
                 "hospital_data": state.get("hospital_data", "Missing"), 
                 "twitter_data": state.get("twitter_data", "Missing")}
 
 
-
-
-# Create the graph
 graph = Graph()
 graph.add_node("Hospital", get_data_from_dataset)
 graph.add_node("Twitter", get_data_from_Twitter)
@@ -162,7 +173,7 @@ if isinstance(final_state, dict):
 # Output result
 print(flattened.get("model_analysis", "Model analysis not found."))\
 #Sends active responses about the outbreak.
-msg=flattened.get("model_analysis","")
+#msg=flattened.get("model_analysis","")
 #outbreak_detected = bool(re.search(r'\boutbreak\b', msg, re.IGNORECASE))
 #print(outbreak_detected)
 #if (outbreak_detected):
@@ -173,3 +184,17 @@ msg=flattened.get("model_analysis","")
             #"to":str11,
             #"subject":"Savdhan Rahe, Sathark Rahe",
             #"message": str1 })
+data = parse_json_markdown(msg)
+def write_csv(data_list, filename):
+    if not data_list:
+        print(f"No data to write for {filename}.")
+        return
+    with open(filename, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=data_list[0].keys())
+        writer.writeheader()
+        writer.writerows(data_list)
+    print(f"Data successfully written to {filename}.")
+write_csv(data['medicines'], 'medicines.csv')
+write_csv(data['equipment'], 'equipment.csv')
+
+
