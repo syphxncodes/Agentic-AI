@@ -1,28 +1,26 @@
 name,quantity
-Paracetamol,600
-Fluconazole,400
-Amoxicillin,550
-Azithromycin,450
-Oseltamivir (Tamiflu),1000
-Ibuprofen,500
-Salbutamol,300
-Metronidazole,250
-Sterile Gauze,800
-Disposable Gloves,1500
-IV Bag,1200
-Syringe Set,1500
-Insulin Pen,50
-Pantoprazole,400
-Ciprofloxacin,200
-Doxycycline,250
-Lisinopril,200
-Losartan,200
-Atorvastatin,50
-Simvastatin,30
-Metformin,30
-Levothyroxine,40
-Prednisolone,100
-Hydrochlorothiazide,150
-Omeprazole,300
-Aspirin,250
-Bandage Roll,700
+Paracetamol,15000
+Fluconazole,6000
+Amoxicillin,12000
+Ciprofloxacin,7000
+Atorvastatin,4000
+Doxycycline,8000
+Lisinopril,10000
+Azithromycin,11000
+Omeprazole,13000
+Levothyroxine,9000
+Metformin,14000
+Prednisolone,5000
+Hydrochlorothiazide,10000
+Simvastatin,6000
+Insulin Pen,4000
+Aspirin,12000
+Salbutamol,8000
+Ventilator,15
+Syringe Set,20000
+Bandage Roll,10000
+Blood Pressure Monitor,30
+Disposable Gloves,30000
+ECG Machine,10
+Thermometer,50
+Drip Stand,25

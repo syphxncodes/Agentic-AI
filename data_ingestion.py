@@ -16,9 +16,19 @@ import smtplib
 from email.message import EmailMessage
 import os
 from langchain_community.tools import DuckDuckGoSearchRun
+#from langchain.agents.agent_toolkits import create_pandas_dataframe_agent
   # Safely extracts JSON block from markdown
 
 send_tool=GmailSendMessage()
+df=pd.read_csv("synthetic_medical_supply_with_severity.csv")
+json_ready = (
+    df.groupby(['hospital_name', 'supply_name'])['quantity_supplied']
+    .mean()
+    .round(2)
+    .reset_index()
+    .rename(columns={'quantity_supplied': 'avg_quantity'})
+    .to_dict(orient='records')
+)
 
 
 MODEL = "gemma3:12b"
@@ -94,21 +104,23 @@ def analyze_with_llm(state):
         if "twitter_data" not in state:
             state["twitter_data"] = "No Twitter data available"
         
-        prompt = PromptTemplate.from_template("""You are an intelligent agent tasked with analyzing the following data:  
+        prompt = PromptTemplate.from_template("""Check if there's any outbreak. You are an intelligent agent tasked with analyzing the following data:  
 - **Hospital Data**: {hospital}  
 - **Twitter Data**: {twitter}  
-
+- **Hospital Supplies Data**: {hospital_supplies}
 Using this information:  
-1. Provide a concise summary of the situation.  
+1. Provide a concise summary of the situation and the disease from the hospital data and the twitter data.   
 2. If there is any indication of a disease outbreak, make sure to explicitly include the word **"outbreak"** in your response.  
 3. Identify the disease, and list the medicines typically used to treat it.  
-4. Provide a list of required medical equipment (just the names and quantities — no descriptions).  
+4. Provide a list of required medical equipment (just the names and quantities — no descriptions).
 
 Additional data for your consideration:  
 - **Average severity**: {severity_avg}  
-- **Average number of people per week**: {people_avg_per_week}  
+- **Average number of people per week**: {people_avg_per_week}
+-   **Hospital Data**: {hospital}  
+-   **Twitter Data**: {twitter}    
 
-Based on this, calculate the **total number of medicines required per hospital**, including the medicine names and quantities.  
+Based on this, Tell the disease and calculate the **total number of medicines required per hospital, consider the hospital supplies data as well, before triggering any amount. Check whether those supplies are enough, if not, then continue.**, including the medicine names and quantities.  
 Note: Since both the severity and the average number of people per week are high, don’t hesitate to recommend a **higher** amount of medical resources.  
 
 In your final response, include:  
@@ -120,7 +132,7 @@ In your final response, include:
  'Surgical Masks' 'Azithromycin' 'Thermometer' 'Omeprazole' 'Ventilator'
  'Ibuprofen' 'Metronidazole' 'Aspirin' 'Hydrochlorothiazide' 'Syringe Set'
  'Simvastatin' 'Bandage Roll' 'Metformin' 'Prednisolone' 'Drip Stand'
- 'ECG Machine' 'Losartan' 'Insulin Pen']](Consider other medicines as well as required) - Consider the outbreak average as well and suggest(and give the number of medicines as a surplus to the hospital per week, give a good amount from 100-500), because you are suggesting less.
+ 'ECG Machine' 'Losartan' 'Insulin Pen']](Consider other medicines as well as required) - Consider the outbreak average as well and suggest(and give the number of medicines as a surplus to the hospital per week, consider the hospital's average amount before giving any extra supply, if that is enough, then don't provide, or else do provide), because you are suggesting less.
 - Equipment (names and quantities).Give the reason behind such number.
 Present all outputs in clear, in json format (with equipment:[name,quantity], and medicines:[name,quantity]). Give different quantities, that are believable.Don't give repeated.
  Always only return json for medicines and equipment, not for the summary. For the summary, return normal text.JSON IS VERY IMPORTANT.""")
@@ -128,6 +140,7 @@ Present all outputs in clear, in json format (with equipment:[name,quantity], an
         final_prompt = prompt.format(
             hospital=state["hospital_data"],
             twitter=state["twitter_data"],
+            hospital_supplies={json.dumps(json_ready, indent=2)},
             severity_avg=severity_avg,
             people_avg_per_week=people_avg_per_week
         )
@@ -177,31 +190,31 @@ if isinstance(final_state, dict):
 # Output result
 print(flattened.get("model_analysis", "Model analysis not found."))
 #Sends active responses about the outbreak.
-msg=flattened.get("model_analysis","")
-outbreak_detected = bool(re.search(r'\boutbreak\b', msg, re.IGNORECASE))
-print(outbreak_detected)
-if (outbreak_detected):
-    x=model.invoke("Give a list of 5 preventive measures for influenza, and give it in a formal way.")
-    list1=["kodithyalasaiuday1234@gmail.com","f20230209@dubai.bits-pilani.ac.in","f20230208@dubai.bits-pilani.ac.in","f20230241@dubai.bits-pilani.ac.in"]
-    for str11 in list1:
+#msg=flattened.get("model_analysis","")
+#outbreak_detected = bool(re.search(r'\boutbreak\b', msg, re.IGNORECASE))
+#print(outbreak_detected)
+#if (outbreak_detected):
+    #x=model.invoke("Give a list of 5 preventive measures for influenza, and give it in a formal way.")
+    #list1=["kodithyalasaiuday1234@gmail.com","f20230209@dubai.bits-pilani.ac.in","f20230208@dubai.bits-pilani.ac.in","f20230241@dubai.bits-pilani.ac.in"]
+    #for str11 in list1:
          #str1=f"hi guys. There is an outbreak of influenza.Be very careful. Savdhan rahe, sathark rahe."
-         response=send_tool.invoke({
-            "to":str11,
-            "subject":"Savdhan Rahe, Sathark Rahe",
-            "message": x })
+         #response=send_tool.invoke({
+            #"to":str11,
+            #"subject":"Savdhan Rahe, Sathark Rahe",
+            #"message": x })
          
 data = parse_json_markdown(msg)
-#def write_csv(data_list, filename):
-    #if not data_list:
-        #print(f"No data to write for {filename}.")
-        #return
-    #with open(filename, mode='w', newline='', encoding='utf-8') as file:
-        #writer = csv.DictWriter(file, fieldnames=data_list[0].keys())
-        #writer.writeheader()
-        #writer.writerows(data_list)
-    #print(f"Data successfully written to {filename}.")
-#write_csv(data['medicines'], 'medicines.csv')
-#write_csv(data['equipment'], 'equipment.csv')
+def write_csv(data_list, filename):
+    if not data_list:
+        print(f"No data to write for {filename}.")
+        return
+    with open(filename, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=data_list[0].keys())
+        writer.writeheader()
+        writer.writerows(data_list)
+    print(f"Data successfully written to {filename}.")
+write_csv(data['medicines'], 'medicines.csv')
+write_csv(data['equipment'], 'equipment.csv')
 
 #EMAIL_ADDRESS = "f20230254@dubai.bits-pilani.ac.in"
 #EMAIL_PASSWORD = "zxje eoqp rnxa vrxu"  

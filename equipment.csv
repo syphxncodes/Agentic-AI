@@ -1,15 +1,12 @@
-name,quantity
-Pulse Oximeter,100
-Defibrillator,20
-Oxygen Cylinder,150
-Ventilator,30
-Stethoscope,50
-ECG Machine,5
-Thermometer,30
-Drip Stand,25
-Blood Pressure Monitor,40
-Surgical Masks,3000
-Hand Sanitizer,100
-Scalpel,40
-Surgical Scissors,25
-Wheelchair,30
+name,quantity,reason
+Wheelchair,20,Increased patient mobility needs during outbreak
+Pulse Oximeter,30,Monitoring oxygen saturation is critical.
+Defibrillator,5,Potential for cardiac complications.
+Stethoscope,30,Essential for patient assessment.
+Surgical Masks,50000,Protection for healthcare workers and limiting spread.
+Oxygen Cylinder,100,Addressing respiratory distress.
+Hand Sanitizer,500,Infection control is paramount.
+IV Bag,15000,Essential for fluid and medication administration.
+Surgical Scissors,200,For minor procedures and wound care.
+Thermometer,100,Fever screening and monitoring
+Blood Pressure Monitor,50,For monitoring blood pressure of the patients.
