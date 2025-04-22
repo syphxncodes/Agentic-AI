@@ -1,17 +1,15 @@
 name,quantity
-Pulse Oximeter,45
-Oxygen Cylinder,100
-Ventilator,15
-ECG Machine,20
-Blood Pressure Monitor,30
-Stethoscope,30
-Thermometer,35
-Drip Stand,50
-Scalpel,25
-Surgical Scissors,20
-Sterile Gauze,300
-Disposable Gloves,1000
-IV Bag,800
-Surgical Masks,1200
-Wheelchair,20
-Bandage Roll,500
+Pulse Oximeter,100
+Defibrillator,20
+Oxygen Cylinder,150
+Ventilator,30
+Stethoscope,50
+ECG Machine,5
+Thermometer,30
+Drip Stand,25
+Blood Pressure Monitor,40
+Surgical Masks,3000
+Hand Sanitizer,100
+Scalpel,40
+Surgical Scissors,25
+Wheelchair,30

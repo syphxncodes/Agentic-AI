@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 from langchain_community.llms import Ollama
-import os
 from langgraph.graph import Graph
 from langchain_core.prompts import PromptTemplate
 from langchain_google_community import GmailToolkit
@@ -12,6 +11,10 @@ from langchain.output_parsers import StructuredOutputParser
 from langchain.output_parsers.json import parse_json_markdown
 import csv
 import datetime
+from io import StringIO
+import smtplib
+from email.message import EmailMessage
+import os
   # Safely extracts JSON block from markdown
 
 send_tool=GmailSendMessage()
@@ -119,7 +122,7 @@ In your final response, include:
  'ECG Machine' 'Losartan' 'Insulin Pen']](Consider other medicines as well as required) - Consider the outbreak average as well and suggest(and give the number of medicines as a surplus to the hospital per week, give a good amount from 100-500), because you are suggesting less.
 - Equipment (names and quantities).Give the reason behind such number.
 Present all outputs in clear, in json format (with equipment:[name,quantity], and medicines:[name,quantity]). Give different quantities, that are believable.Don't give repeated.
- Always only return json for medicines and equipment, not for the summary. For the summary, return normal text.""")
+ Always only return json for medicines and equipment, not for the summary. For the summary, return normal text.JSON IS VERY IMPORTANT.""")
         
         final_prompt = prompt.format(
             hospital=state["hospital_data"],
@@ -197,4 +200,27 @@ def write_csv(data_list, filename):
 write_csv(data['medicines'], 'medicines.csv')
 write_csv(data['equipment'], 'equipment.csv')
 
+EMAIL_ADDRESS = "f20230254@dubai.bits-pilani.ac.in"
+EMAIL_PASSWORD = "zxje eoqp rnxa vrxu"  
 
+msg = EmailMessage()
+msg['Subject'] = 'Ordered Data CSV'
+msg['From'] = EMAIL_ADDRESS
+msg['To'] = 'kodithyalasaiuday1234@gmail.com'
+msg.set_content('The 2 attached csv files are an order list of the extra required medicines and equipment because of the particular outbreak.')
+
+
+filename = 'medicines.csv'
+with open(filename, 'rb') as f:
+    file_data = f.read()
+    msg.add_attachment(file_data, maintype='text', subtype='csv', filename=filename)
+
+with open("equipment.csv", "rb") as f:
+    file_data = f.read()
+    msg.add_attachment(file_data, maintype='text', subtype='csv', filename="equipment.csv")
+
+with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+    smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+    smtp.send_message(msg)
+
+print("Email sent successfully with attachment.")
