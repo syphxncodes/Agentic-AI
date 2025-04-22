@@ -1,13 +1,11 @@
 name,quantity
-Wheelchair,150
-Pulse Oximeter,200
-Defibrillator,20
-Oxygen Cylinder,120
-Ventilator,30
-ECG Machine,15
-Blood Pressure Monitor,100
-Drip Stand,100
-Surgical Masks,10000
-Disposable Gloves,20000
-IV Bag,5000
+Wheelchair,250
+Pulse Oximeter,150
+Defibrillator,50
 Surgical Scissors,100
+ECG Machine,25
+Bandage Roll,200
+Surgical Masks,3000
+Disposable Gloves,5000
+IV Bag,10000
+Blood Pressure Monitor,100

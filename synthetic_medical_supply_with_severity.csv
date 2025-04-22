@@ -1,5 +1,5 @@
 supply_name,supplier_name,quantity_supplied,hospital_name,weekly_wastage,severity,people_per_week
-Ciprofloxacin,Al Zahrawi Medical,3356,Emirates Hospital Dubai,13,1,580
+Ciprofloxacin,Al Zahrawi Medical,3359,Emirates Hospital Dubai,13,1,580
 Atorvastatin,Paramount Medical Equipment Trading LLC,3125,Saudi German Hospital Dubai,30,1,706
 Wheelchair,Al Maqam Medical Supplies LLC,445,Al Zahra Hospital Dubai,10,2,377
 Salbutamol,Al Maqam Medical Supplies LLC,2754,Emirates Hospital Dubai,30,3,705
@@ -547,10 +547,10 @@ Doxycycline,City Pharmacy Co.,3906,American Hospital Dubai,37,3,851
 Paracetamol,City Pharmacy Co.,123,Dubai Hospital,42,3,618
 Losartan,Paramount Medical Equipment Trading LLC,3509,Al Zahra Hospital Dubai,41,5,639
 Stethoscope,Gulf Drug,3642,Saudi German Hospital Dubai,43,5,167
-Fluconazole,Al Naghi Medical,4500,Mediclinic City Hospital Dubai,20,3,783
-Blood Pressure Monitor,HealthPro Distributors UAE,3438,Emirates Hospital Dubai,29,3,939
+Fluconazole,Al Naghi Medical,4510,Mediclinic City Hospital Dubai,20,3,783
+Blood Pressure Monitor,HealthPro Distributors UAE,3538,Emirates Hospital Dubai,29,3,939
 Lisinopril,Pharma Solutions,868,American Hospital Dubai,47,4,640
-Surgical Masks,MPC Healthcare,518,Saudi German Hospital Dubai,10,3,580
+Surgical Masks,MPC Healthcare,518,Saudi German Hospital Dubai,11,3,580
 Levothyroxine,City Pharmacy Co.,537,Al Zahra Hospital Dubai,23,4,675
 Aspirin,AKI Pharma,3282,Saudi German Hospital Dubai,12,3,269
 ECG Machine,Al Zahrawi Medical,1540,American Hospital Dubai,24,3,912

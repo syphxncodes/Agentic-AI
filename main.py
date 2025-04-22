@@ -15,6 +15,7 @@ from io import StringIO
 import smtplib
 from email.message import EmailMessage
 import os
+import sys
 from langchain_community.tools import DuckDuckGoSearchRun
 #from langchain.agents.agent_toolkits import create_pandas_dataframe_agent
   # Safely extracts JSON block from markdown
@@ -199,9 +200,12 @@ log_entry={
 }
 with open("agent_logs.json","a") as f:
     f.write(json.dumps(log_entry)+"\n")
-#outbreak_detected = bool(re.search(r'\boutbreak\b', msg, re.IGNORECASE))
+outbreak_detected = bool(re.search(r'\boutbreak\b', msg, re.IGNORECASE))
 #print(outbreak_detected)
-#if (outbreak_detected):
+if (not(outbreak_detected)):
+    print("No outbreak")
+    sys.exit()
+else:
     #x=model.invoke("Give a list of 5 preventive measures for influenza, and give it in a formal way.")
     #list1=["kodithyalasaiuday1234@gmail.com","f20230209@dubai.bits-pilani.ac.in","f20230208@dubai.bits-pilani.ac.in","f20230241@dubai.bits-pilani.ac.in"]
     #for str11 in list1:
@@ -211,67 +215,71 @@ with open("agent_logs.json","a") as f:
             #"subject":"Savdhan Rahe, Sathark Rahe",
             #"message": x })
          
-data = parse_json_markdown(msg)
-def write_csv(data_list, filename):
-    if not data_list:
-        print(f"No data to write for {filename}.")
-        return
-    with open(filename, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=data_list[0].keys())
-        writer.writeheader()
-        writer.writerows(data_list)
-    print(f"Data successfully written to {filename}.")
-write_csv(data['medicines'], 'medicines.csv')
-write_csv(data['equipment'], 'equipment.csv')
-log_entry={
-    "title":"Restock of medicines",
-    "details":"Agent has restocked the medicines looking at the severity of the condition.",
-    "timestamp":datetime.now().isoformat()
-}
-with open("agent_logs.json","a") as f:
-    f.write(json.dumps(log_entry)+"\n")
-#EMAIL_ADDRESS = "f20230254@dubai.bits-pilani.ac.in"
-#EMAIL_PASSWORD = "zxje eoqp rnxa vrxu"  
+    data = parse_json_markdown(msg)
+    def write_csv(data_list, filename):
+        if not data_list:
+            print(f"No data to write for {filename}.")
+            return
+        with open(filename, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.DictWriter(file, fieldnames=data_list[0].keys())
+            writer.writeheader()
+            writer.writerows(data_list)
+        print(f"Data successfully written to {filename}.")
+    write_csv(data['medicines'], 'medicines.csv')
+    write_csv(data['equipment'], 'equipment.csv')
+    log_entry={
+        "title":"Restock of medicines",
+        "details":"Agent has restocked the medicines looking at the severity of the condition.",
+        "timestamp":datetime.now().isoformat()
+    }
+    with open("agent_logs.json","a") as f:
+        f.write(json.dumps(log_entry)+"\n")
+    #EMAIL_ADDRESS = "f20230254@dubai.bits-pilani.ac.in"
+    #EMAIL_PASSWORD = "zxje eoqp rnxa vrxu"  
 
-#msg = EmailMessage()
-#msg['Subject'] = 'Ordered Data CSV'
-#msg['From'] = EMAIL_ADDRESS
-#msg['To'] = 'kodithyalasaiuday1234@gmail.com'
-#msg.set_content('The 2 attached csv files are an order list of the extra required medicines and equipment because of the particular outbreak.')
+    #msg = EmailMessage()
+    #msg['Subject'] = 'Ordered Data CSV'
+    #msg['From'] = EMAIL_ADDRESS
+    #msg['To'] = 'kodithyalasaiuday1234@gmail.com'
+    #msg.set_content('The 2 attached csv files are an order list of the extra required medicines and equipment because of the particular outbreak.')
 
 
-#filename = 'medicines.csv'
-#with open(filename, 'rb') as f:
-    #file_data = f.read()
-    #msg.add_attachment(file_data, maintype='text', subtype='csv', filename=filename)
+    #filename = 'medicines.csv'
+    #with open(filename, 'rb') as f:
+        #file_data = f.read()
+        #msg.add_attachment(file_data, maintype='text', subtype='csv', filename=filename)
 
-#with open("equipment.csv", "rb") as f:
-    #file_data = f.read()
-    #msg.add_attachment(file_data, maintype='text', subtype='csv', filename="equipment.csv")
+    #with open("equipment.csv", "rb") as f:
+        #file_data = f.read()
+        #msg.add_attachment(file_data, maintype='text', subtype='csv', filename="equipment.csv")
 
-#with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-    #smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-    #smtp.send_message(msg)
+    #with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+        #smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+        #smtp.send_message(msg)
 
-#print("Email sent successfully with attachment.")
-df = pd.read_csv("synthetic_medical_supply_with_severity.csv")
-df1 = pd.read_csv("medicines.csv")    # Extra medicines
-df2 = pd.read_csv("equipment.csv")    # Extra equipment
-df_extra = pd.concat([df1, df2], ignore_index=True)
-df_extra = df_extra.rename(columns={'name': 'supply_name', 'quantity': 'extra_quantity'})
-df = df.merge(
-    df_extra,
-    on='supply_name',
-    how='left'
-)
-df['extra_quantity'] = df['extra_quantity'].fillna(0)
-df['quantity_supplied'] += df['extra_quantity']
-df.drop(columns=['extra_quantity'], inplace=True)
-df.to_csv("updated_medical_supply.csv", index=False)
-log_entry={
-    "title":"Updated the stock.",
-    "details":"The medicines have been stocked into the respective hospital.",
-    "timestamp":datetime.now().isoformat()
-}
-with open("agent_logs.json","a") as f:
-    f.write(json.dumps(log_entry)+"\n")
+    #print("Email sent successfully with attachment.")
+    df = pd.read_csv("synthetic_medical_supply_with_severity.csv")
+    df3=df.copy()
+    df1 = pd.read_csv("medicines.csv")    # Extra medicines
+    df2 = pd.read_csv("equipment.csv")    # Extra equipment
+    df_extra = pd.concat([df1, df2], ignore_index=True)
+    df_extra = df_extra.rename(columns={'name': 'supply_name', 'quantity': 'extra_quantity'})
+    df3 = df3.merge(
+        df_extra,
+        on='supply_name',
+        how='left'
+    )
+    df3['extra_quantity'] = df3['extra_quantity'].fillna(0)
+    df3['quantity_supplied'] += df3['extra_quantity']
+    df3.drop(columns=['extra_quantity'], inplace=True)
+    df3.to_csv("updated_medical_supply.csv", index=False)
+    log_entry={
+        "title":"Updated the stock.",
+        "details":"The medicines have been stocked into the respective hospital.",
+        "timestamp":datetime.now().isoformat()
+    }
+    with open("agent_logs.json","a") as f:
+        f.write(json.dumps(log_entry)+"\n")
+
+
+
