@@ -1,11 +1,4 @@
-import csv
-from io import StringIO
-import pandas as pd
-# Example data (replace with your actual data)
-data=pd.read_csv("medicines.csv")
-# Write to CSV string
-csv_buffer = StringIO()
-data.to_csv(csv_buffer, index=False)
-csv_string = csv_buffer.getvalue()
-
-print(csv_string)
+from langchain_community.tools import DuckDuckGoSearchRun
+search = DuckDuckGoSearchRun()
+disease="Influenza"
+print(search.invoke(f'Give 5 points on preventive measures for the {disease} as a list'))

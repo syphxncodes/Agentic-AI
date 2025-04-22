@@ -15,6 +15,7 @@ from io import StringIO
 import smtplib
 from email.message import EmailMessage
 import os
+from langchain_community.tools import DuckDuckGoSearchRun
   # Safely extracts JSON block from markdown
 
 send_tool=GmailSendMessage()
@@ -22,7 +23,7 @@ send_tool=GmailSendMessage()
 
 MODEL = "gemma3:12b"
 model = Ollama(model=MODEL)
-
+most_frequent_disease="Influenza"
 def get_data_from_dataset(state):
     try:
         
@@ -174,53 +175,55 @@ if isinstance(final_state, dict):
         flattened.update(step_data)
         
 # Output result
-print(flattened.get("model_analysis", "Model analysis not found."))\
+print(flattened.get("model_analysis", "Model analysis not found."))
 #Sends active responses about the outbreak.
-#msg=flattened.get("model_analysis","")
-#outbreak_detected = bool(re.search(r'\boutbreak\b', msg, re.IGNORECASE))
-#print(outbreak_detected)
-#if (outbreak_detected):
-    #list1=["kodithyalasaiuday1234@gmail.com","f20230209@dubai.bits-pilani.ac.in","f20230208@dubai.bits-pilani.ac.in","f20230241@dubai.bits-pilani.ac.in"]
-    #for str11 in list1:
+msg=flattened.get("model_analysis","")
+outbreak_detected = bool(re.search(r'\boutbreak\b', msg, re.IGNORECASE))
+print(outbreak_detected)
+if (outbreak_detected):
+    x=model.invoke("Give a list of 5 preventive measures for influenza, and give it in a formal way.")
+    list1=["kodithyalasaiuday1234@gmail.com","f20230209@dubai.bits-pilani.ac.in","f20230208@dubai.bits-pilani.ac.in","f20230241@dubai.bits-pilani.ac.in"]
+    for str11 in list1:
          #str1=f"hi guys. There is an outbreak of influenza.Be very careful. Savdhan rahe, sathark rahe."
-         #response=send_tool.invoke({
-            #"to":str11,
-            #"subject":"Savdhan Rahe, Sathark Rahe",
-            #"message": str1 })
+         response=send_tool.invoke({
+            "to":str11,
+            "subject":"Savdhan Rahe, Sathark Rahe",
+            "message": x })
+         
 data = parse_json_markdown(msg)
-def write_csv(data_list, filename):
-    if not data_list:
-        print(f"No data to write for {filename}.")
-        return
-    with open(filename, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=data_list[0].keys())
-        writer.writeheader()
-        writer.writerows(data_list)
-    print(f"Data successfully written to {filename}.")
-write_csv(data['medicines'], 'medicines.csv')
-write_csv(data['equipment'], 'equipment.csv')
+#def write_csv(data_list, filename):
+    #if not data_list:
+        #print(f"No data to write for {filename}.")
+        #return
+    #with open(filename, mode='w', newline='', encoding='utf-8') as file:
+        #writer = csv.DictWriter(file, fieldnames=data_list[0].keys())
+        #writer.writeheader()
+        #writer.writerows(data_list)
+    #print(f"Data successfully written to {filename}.")
+#write_csv(data['medicines'], 'medicines.csv')
+#write_csv(data['equipment'], 'equipment.csv')
 
-EMAIL_ADDRESS = "f20230254@dubai.bits-pilani.ac.in"
-EMAIL_PASSWORD = "zxje eoqp rnxa vrxu"  
+#EMAIL_ADDRESS = "f20230254@dubai.bits-pilani.ac.in"
+#EMAIL_PASSWORD = "zxje eoqp rnxa vrxu"  
 
-msg = EmailMessage()
-msg['Subject'] = 'Ordered Data CSV'
-msg['From'] = EMAIL_ADDRESS
-msg['To'] = 'kodithyalasaiuday1234@gmail.com'
-msg.set_content('The 2 attached csv files are an order list of the extra required medicines and equipment because of the particular outbreak.')
+#msg = EmailMessage()
+#msg['Subject'] = 'Ordered Data CSV'
+#msg['From'] = EMAIL_ADDRESS
+#msg['To'] = 'kodithyalasaiuday1234@gmail.com'
+#msg.set_content('The 2 attached csv files are an order list of the extra required medicines and equipment because of the particular outbreak.')
 
 
-filename = 'medicines.csv'
-with open(filename, 'rb') as f:
-    file_data = f.read()
-    msg.add_attachment(file_data, maintype='text', subtype='csv', filename=filename)
+#filename = 'medicines.csv'
+#with open(filename, 'rb') as f:
+    #file_data = f.read()
+    #msg.add_attachment(file_data, maintype='text', subtype='csv', filename=filename)
 
-with open("equipment.csv", "rb") as f:
-    file_data = f.read()
-    msg.add_attachment(file_data, maintype='text', subtype='csv', filename="equipment.csv")
+#with open("equipment.csv", "rb") as f:
+    #file_data = f.read()
+    #msg.add_attachment(file_data, maintype='text', subtype='csv', filename="equipment.csv")
 
-with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
-    smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
-    smtp.send_message(msg)
+#with smtplib.SMTP_SSL('smtp.gmail.com', 465) as smtp:
+    #smtp.login(EMAIL_ADDRESS, EMAIL_PASSWORD)
+    #smtp.send_message(msg)
 
-print("Email sent successfully with attachment.")
+#print("Email sent successfully with attachment.")
